@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Roboto, Arial, sans-serif;
+        }
+
+        #videos {
+            margin-left: 5%;
+            width: 80%;
+            height: 150px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+            margin-top: 15px;
+            grid-row-gap: 20px;
+        }
+
+        #videos>iframe {
+            width: auto;
+            height: auto;
+        }
+
+        #videos p {
+            font-size: 14px;
+            margin-top: 5px;
+            margin-bottom: 0px;
+        }
+
+        #videos .channel {
+            font-size: 12px;
+            color: grey;
+        }
+
+        #navbar {
+            width: 100%;
+            height: 45px;
+            border-bottom: 1px solid lightgrey;
+            display: flex;
+        }
+
+        #query {
+            margin-left: 28%;
+            width: 400px;
+            height: 20px;
+            margin-top: 10px;
+        }
+
+        #button {
+            height: 25px;
+            width: 60px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar">
+        <input type="text" id="query" placeholder="Search" />
+        <button onclick="myRequest()" id="button"><span class="material-icons-outlined">
+                Search
+            </span></button>
+    </div>
+    <div id="videos"></div>
+</body>
+
+</html>
+<script>
+    var videos_div;
+
+    async function myRequest() {
+        let query = document.getElementById('query').value;
+        let res = await fetch(`https://youtube.googleapis.com/youtube/v3/search?q=${query}&part=snippet&maxResults=20&type=video&key=AIzaSyCrLLZtF8dZOnLitef3ZmyfPaNZ4IrgHH0`);
+        let data = await res.json();
+        console.log(data);
+        showVideos(data);
+    }
+
+    function showVideos(data) {
+        videos_div = document.getElementById('videos');
+        videos_div.innerHTML = null;
+        let { items } = data;
+        items.forEach(({ id: { videoId }, snippet: { title, channelTitle } }) => {
+            let div = document.createElement('div');
+            fetch(`https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${videoId}&key=AIzaSyCrLLZtF8dZOnLitef3ZmyfPaNZ4IrgHH0`)
+                .then((info) => info.json().then((details) => {
+                    console.log(details);
+                }))
+            div.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" title="YouTube video player"
+            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe> `;
+            let heading = document.createElement('p');
+            heading.textContent = title;
+            div.append(heading);
+            let channel = document.createElement('p');
+            channel.textContent = channelTitle;
+            channel.setAttribute('class', 'channel');
+            div.append(channel);
+            videos_div.appendChild(div);
+        });
+    }
+
+    function showPopular(data) {
+        videos_div = document.getElementById('videos');
+        videos_div.innerHTML = null;
+        let { items } = data;
+        items.forEach(({ id, snippet: { title, channelTitle } }) => {
+            let div = document.createElement('div');
+            fetch(`https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${id}&key=AIzaSyCrLLZtF8dZOnLitef3ZmyfPaNZ4IrgHH0`)
+                .then((info) => info.json().then((details) => {
+                }))
+            div.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}" title="YouTube video player"
+            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe> `;
+            let heading = document.createElement('p');
+            heading.textContent = title;
+            div.append(heading);
+            let channel = document.createElement('p');
+            channel.textContent = channelTitle;
+            channel.setAttribute('class', 'channel');
+            div.append(channel);
+            videos_div.appendChild(div);
+        });
+    }
+
+    async function mostPopular() {
+        let res = await fetch("https://youtube.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&chart=mostPopular&regionCode=in&key=AIzaSyCrLLZtF8dZOnLitef3ZmyfPaNZ4IrgHH0&maxResults=20");
+        let data = await res.json();
+        console.log(data);
+        showPopular(data);
+    }
+
+    mostPopular();
+</script>
